@@ -9,11 +9,42 @@ import React, { useState, useEffect } from 'react';
       const [records, setRecords] = useState<MedicalRecord[]>([]);
       const [loading, setLoading] = useState(false);
       const [error, setError] = useState<string | null>(null);
+      const [symptomSearch, setSymptomSearch] = useState('');
+      const [searchResults, setSearchResults] = useState<MedicalRecord[]>([]);
+      const [noResultsMessage, setNoResultsMessage] = useState<string | null>(null);
 
       useEffect(() => {
-        if (aadharNumber) {
-          searchPatient();
-        }
+        const fetchInitialData = async () => {
+          if (!aadharNumber) return;
+          setLoading(true);
+          setError(null);
+          try {
+            console.log("Fetching medical records for Aadhar:", aadharNumber);
+            const { data, error } = await supabase
+              .from('medical_records')
+              .select('*')
+              .eq('aadhar_number', aadharNumber)
+              .order('treatment_date', { ascending: false });
+
+            if (error) {
+              console.error("Error fetching initial records:", error);
+              setError(`Error fetching initial records: ${error.message}`);
+              setRecords([]);
+              return;
+            }
+
+            console.log("Initial records fetched:", data);
+            setRecords(data || []);
+          } catch (err: any) {
+            console.error("Unexpected error:", err);
+            setError(`An unexpected error occurred: ${err.message}`);
+            setRecords([]);
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        fetchInitialData();
       }, [aadharNumber]);
 
       const searchPatient = async () => {
@@ -21,6 +52,7 @@ import React, { useState, useEffect } from 'react';
         
         setLoading(true);
         setError(null);
+        setNoResultsMessage(null);
         
         try {
           console.log("Fetching patient data for Aadhar:", aadharNumber);
@@ -64,6 +96,33 @@ import React, { useState, useEffect } from 'react';
           setRecords([]);
         } finally {
           setLoading(false);
+        }
+      };
+
+      const handleSymptomSearch = () => {
+        if (!symptomSearch) {
+          setSearchResults([]);
+          setNoResultsMessage(null);
+          return;
+        }
+
+        if (!records || records.length === 0) {
+          setSearchResults([]);
+          setNoResultsMessage("No medical records available to search.");
+          return;
+        }
+
+        const filteredRecords = records.filter(record =>
+          record.symptoms.some(symptom =>
+            symptom.toLowerCase().includes(symptomSearch.toLowerCase())
+          )
+        );
+        setSearchResults(filteredRecords);
+        console.log("Filtered records:", filteredRecords);
+        if (filteredRecords.length === 0) {
+          setNoResultsMessage("This symptom wasn't found in the records.");
+        } else {
+          setNoResultsMessage(null);
         }
       };
 
@@ -115,6 +174,59 @@ import React, { useState, useEffect } from 'react';
                 </div>
               )}
             </div>
+
+            {patient && (
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+                <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
+                  <Search className="h-6 w-6" />
+                  Symptom Search
+                </h2>
+                <div className="flex gap-4 mb-4">
+                  <input
+                    type="text"
+                    value={symptomSearch}
+                    onChange={(e) => setSymptomSearch(e.target.value)}
+                    placeholder="Enter symptom to search"
+                    className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <button
+                    onClick={handleSymptomSearch}
+                    className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg flex items-center gap-2 transition-colors"
+                  >
+                    Search
+                  </button>
+                </div>
+
+                {noResultsMessage && (
+                  <div className="text-center py-6 text-white/60">
+                    {noResultsMessage}
+                  </div>
+                )}
+
+                {searchResults.length > 0 && (
+                  <div className="space-y-4">
+                    {searchResults.map((record) => (
+                      <div
+                        key={record.id}
+                        className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-lg hover:bg-white/10 transition-colors"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-start">
+                            <div className="text-lg font-semibold">
+                              {new Date(record.treatment_date).toLocaleDateString()}
+                            </div>
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-medium text-white/70 mb-1">Prescription</h4>
+                            <p className="text-sm whitespace-pre-line">{record.prescription}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {patient && (
               <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
