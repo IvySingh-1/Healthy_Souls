@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, AlertCircle, User, History, PlusCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { Patient, MedicalRecord } from '../types/database';
@@ -11,6 +11,17 @@ export function SymptomChecker() {
   const [newSymptom, setNewSymptom] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [filteredRecords, setFilteredRecords] = useState<MedicalRecord[]>([]);
+
+  useEffect(() => {
+    if (aadharNumber) {
+      searchPatient();
+    }
+  }, [aadharNumber]);
+
+  useEffect(() => {
+    filterRecordsBySymptoms();
+  }, [records, symptoms]);
 
   const searchPatient = async () => {
     if (!aadharNumber) return;
@@ -19,26 +30,49 @@ export function SymptomChecker() {
     setError(null);
     
     try {
+      console.log("Fetching patient data for Aadhar:", aadharNumber);
       const { data: patientData, error: patientError } = await supabase
         .from('patients')
         .select('*')
         .eq('aadhar_number', aadharNumber)
-        .single();
+        .maybeSingle();
 
-      if (patientError) throw patientError;
+      if (patientError) {
+        console.error("Error fetching patient data:", patientError);
+        setError(`Error fetching patient data: ${patientError.message}`);
+        setPatient(null);
+        setRecords([]);
+        setFilteredRecords([]);
+        return;
+      }
 
+      console.log("Patient data fetched successfully:", patientData);
+      setPatient(patientData);
+
+      console.log("Fetching medical records for Aadhar:", aadharNumber);
       const { data: recordsData, error: recordsError } = await supabase
         .from('medical_records')
         .select('*')
         .eq('aadhar_number', aadharNumber)
         .order('treatment_date', { ascending: false });
 
-      if (recordsError) throw recordsError;
+      if (recordsError) {
+        console.error("Error fetching medical records:", recordsError);
+        setError(`Error fetching medical records: ${recordsError.message}`);
+        setRecords([]);
+        setFilteredRecords([]);
+        return;
+      }
 
-      setPatient(patientData);
-      setRecords(recordsData);
+      console.log("Medical records fetched successfully:", recordsData);
+      setRecords(recordsData || []);
+      setFilteredRecords(recordsData || []); // Initialize filtered records with all records
     } catch (err: any) {
-      setError(err.message);
+      console.error("Unexpected error:", err);
+      setError(`An unexpected error occurred: ${err.message}`);
+      setPatient(null);
+      setRecords([]);
+      setFilteredRecords([]);
     } finally {
       setLoading(false);
     }
@@ -56,17 +90,23 @@ export function SymptomChecker() {
   };
 
   const filterRecordsBySymptoms = () => {
-    if (!symptoms.length) return records;
-    return records.filter(record => 
+    if (!records.length) {
+      setFilteredRecords([]);
+      return;
+    }
+    if (!symptoms.length) {
+      setFilteredRecords(records);
+      return;
+    }
+    const filtered = records.filter(record => 
       symptoms.every(symptom => 
         record.symptoms.some(s => 
           s.toLowerCase().includes(symptom.toLowerCase())
         )
       )
     );
+    setFilteredRecords(filtered);
   };
-
-  const filteredRecords = filterRecordsBySymptoms();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-indigo-800 to-blue-900 text-white p-6">
@@ -159,7 +199,7 @@ export function SymptomChecker() {
                 Medical History
               </h2>
               
-              {filteredRecords.length > 0 ? (
+              {filteredRecords && filteredRecords.length > 0 ? (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {filteredRecords.map((record) => (
                     <div
