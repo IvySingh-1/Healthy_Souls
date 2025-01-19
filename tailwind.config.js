@@ -4,7 +4,9 @@ export default {
   theme: {
     extend: {
       animation: {
-        'gradient': 'gradient 8s linear infinite',
+        'spin-slow': 'spin 8s linear infinite',
+        'spin-reverse': 'spin 6s linear infinite reverse',
+        'gradient': 'gradient 3s linear infinite',
       },
       keyframes: {
         gradient: {
@@ -17,12 +19,6 @@ export default {
             'background-position': 'right center'
           },
         },
-      },
-      backgroundImage: {
-        'grid-pattern': `radial-gradient(circle, #ffffff 1px, transparent 1px)`,
-      },
-      backgroundSize: {
-        'grid-pattern': '40px 40px',
       },
     },
   },
