@@ -49,9 +49,9 @@ export function Dashboard() {
   ];
 
   const recentActivity = [
-    { id: 1, type: 'New Patient', name: 'Ram Kumar', time: '2 hours ago', aadhar: '22' },
-    { id: 2, type: 'Medical Record', name: 'Ram Kumar', time: '2 hours ago', description: 'Added new symptoms' },
-    { id: 3, type: 'Symptom Check', name: 'Ram Kumar', time: '2 hours ago', symptoms: ['Fever', 'Cough'] },
+    { id: 1, type: 'New Patient', name: 'Jessica Rolle', time: '2 hours ago', aadhar: '22' },
+    { id: 2, type: 'Medical Record', name: 'Sabrina Swift', time: '4 hours ago', description: 'Added new symptoms' },
+    { id: 3, type: 'Symptom Check', name: 'Jonathan Smith', time: '7 hours ago', symptoms: ['Fever', 'Cough'] },
   ];
 
   const appointments = [
