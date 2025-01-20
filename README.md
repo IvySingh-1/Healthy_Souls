@@ -1,6 +1,6 @@
 # Healthy Souls
 
-**Healthy Souls** is a web application designed to help users manage and track their personal finances. The app allows users to record expenses, categorize them, and visualize their spending through charts and reports. It provides a clean and intuitive user interface for managing everyday expenses and financial data.
+**Healthy Souls** is a web application designed to help patients and doctors to manage and track their past medical history. The app allows users to check symptoms thereby facilitating doctors in a more accurate observation. It provides a clean and intuitive user interface for managing records.
 
 ---
 
