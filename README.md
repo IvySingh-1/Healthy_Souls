@@ -36,7 +36,7 @@
 
 ### Backend
 
-- **Supabase - PLpgSQL**: JavaScript runtime for the server-side logic.
+**Supabase PLpgSQL**: JavaScript runtime for the server-side logic.
 - Database: Store and manage data for applications using a Postgres database 
 - Authentication: Manage user sign ups and logins, and secure data with Row Level Security 
 - Storage: Save multimedia files and other large data 
